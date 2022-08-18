@@ -24,6 +24,7 @@ func (i item) FilterValue() string { return i.title }
 type model struct {
 	list list.Model
 	chosen int
+	editorActive bool
 	newNoteName string
 	textInput textinput.Model
 	err error
@@ -81,8 +82,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = msg.err
 			return m, tea.Quit
 		}
-		m.resetChosen()
-		return m, nil
+		m.editorActive = false
 	}
 
 	if m.inNote() {
@@ -111,11 +111,29 @@ func (m model) View() string {
 }
 
 func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
+	if msg, ok := msg.(tea.KeyMsg); ok {
+		msg := msg.String()
+		switch msg {
+		case "esc", "q":
+			m.resetChosen()
+			return m, nil
+		case "e":
+			return m, openEditor()
+    }
+	}
 	return m, nil
 }
 
 func newNoteEditorUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
-	m.newNoteName = ""
+	if _, ok := msg.(editorFinishedMsg); ok {
+		m.resetChosen()
+		m.newNoteName = ""
+		return m, nil
+	}
+	if m.editorActive {
+		return m, nil
+	}
+	m.editorActive = true
 	return m, openEditor()
 }
 
