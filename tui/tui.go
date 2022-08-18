@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"io/fs"
+	"io/ioutil"
 	"os"
 	"os/exec"
 
@@ -20,6 +22,14 @@ type item struct {
 func (i item) Title() string       { return i.title }
 func (i item) Description() string { return i.desc }
 func (i item) FilterValue() string { return i.title }
+
+type fileItem struct {
+	file fs.FileInfo
+}
+
+func (i fileItem) Title() string       { return i.file.Name() }
+func (i fileItem) Description() string { return i.file.ModTime().String() }
+func (i fileItem) FilterValue() string { return i.file.Name() }
 
 type model struct {
 	list list.Model
@@ -67,8 +77,19 @@ func openEditor() tea.Cmd {
 	})
 }
 
+type dirFilesMsg struct { files []fs.FileInfo }
+
+func getDirFiles() tea.Msg {
+	files, err := ioutil.ReadDir("./")
+	if err != nil {
+		fmt.Println("fatal: ", err)
+		os.Exit(1)
+	}
+	return dirFilesMsg{files}
+}
+
 func (m model) Init() tea.Cmd {
-	return textinput.Blink
+	return tea.Batch(textinput.Blink, getDirFiles)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -83,6 +104,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 		m.editorActive = false
+	case dirFilesMsg:
+		index := len(m.list.Items())
+		for i, file := range msg.files {
+			m.list.InsertItem(index + i, fileItem{file})
+		}
+		return m, nil
 	}
 
 	if m.inNote() {
@@ -183,8 +210,14 @@ func fileListUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 func noteView(m model) string {
 	listItem := m.list.Items()[m.chosen]
-	item := listItem.(item);
-	return fmt.Sprintf("in note %s", item.title)
+	switch item := listItem.(type) {
+	case item:
+		return fmt.Sprintf("in note %s", item.title)
+	case fileItem:
+		return fmt.Sprintf("in note %s", item.file.Name())
+	}
+
+	panic("unhandled item type")
 }
 
 func newNoteEditorView(m model) string {
@@ -206,29 +239,6 @@ func fileListView(m model) string {
 func Run() {
 	items := []list.Item{
 		item{title: "New note", desc: "Write a new encrypted note"},
-		item{title: "Raspberry Pi’s", desc: "I have ’em all over my house"},
-		item{title: "Nutella", desc: "It's good on toast"},
-		item{title: "Bitter melon", desc: "It cools you down"},
-		item{title: "Nice socks", desc: "And by that I mean socks without holes"},
-		item{title: "Eight hours of sleep", desc: "I had this once"},
-		item{title: "Cats", desc: "Usually"},
-		item{title: "Plantasia, the album", desc: "My plants love it too"},
-		item{title: "Pour over coffee", desc: "It takes forever to make though"},
-		item{title: "VR", desc: "Virtual reality...what is there to say?"},
-		item{title: "Noguchi Lamps", desc: "Such pleasing organic forms"},
-		item{title: "Linux", desc: "Pretty much the best OS"},
-		item{title: "Business school", desc: "Just kidding"},
-		item{title: "Pottery", desc: "Wet clay is a great feeling"},
-		item{title: "Shampoo", desc: "Nothing like clean hair"},
-		item{title: "Table tennis", desc: "It’s surprisingly exhausting"},
-		item{title: "Milk crates", desc: "Great for packing in your extra stuff"},
-		item{title: "Afternoon tea", desc: "Especially the tea sandwich part"},
-		item{title: "Stickers", desc: "The thicker the vinyl the better"},
-		item{title: "20° Weather", desc: "Celsius, not Fahrenheit"},
-		item{title: "Warm light", desc: "Like around 2700 Kelvin"},
-		item{title: "The vernal equinox", desc: "The autumnal equinox is pretty good too"},
-		item{title: "Gaffer’s tape", desc: "Basically sticky fabric"},
-		item{title: "Terrycloth", desc: "In other words, towel fabric"},
 	}
 
 	m := model{chosen: -1, list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
