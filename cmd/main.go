@@ -1,4 +1,4 @@
-package tui
+package main
 
 import (
 	"fmt"
@@ -236,7 +236,7 @@ func fileListView(m model) string {
 	return docStyle.Render(m.list.View())
 }
 
-func Run() {
+func main() {
 	items := []list.Item{
 		item{title: "New note", desc: "Write a new encrypted note"},
 	}
