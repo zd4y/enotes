@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/zd4y/notes/pkg/notes"
+
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -36,8 +38,28 @@ type model struct {
 	chosen int
 	editorActive bool
 	newNoteName string
+	password string
+	passwordCorrect bool
+	passwordVerified bool
 	textInput textinput.Model
 	err error
+}
+
+func initialModel() model {
+	items := []list.Item{
+		item{title: "New note", desc: "Write a new encrypted note"},
+	}
+
+	textInput := textinput.New()
+	textInput.Placeholder = "Password"
+	textInput.Focus()
+	m := model{chosen: -1, list: list.New(items, list.NewDefaultDelegate(), 0, 0), textInput: textInput}
+	m.list.Title = "Notes"
+	return m
+}
+
+func (m model) inPassword() bool {
+	return len(m.password) == 0
 }
 
 func (m model) inNote() bool {
@@ -77,6 +99,18 @@ func openEditor() tea.Cmd {
 	})
 }
 
+type verifyPasswordMsg struct {
+	passwordsMatch bool
+	err error
+}
+
+func verifyPassword(password string) tea.Cmd {
+	return func() tea.Msg {
+		err := notes.VerifyPassword(password)
+		return verifyPasswordMsg { err == nil, err }
+	}
+}
+
 type dirFilesMsg struct { files []fs.FileInfo }
 
 func getDirFiles() tea.Msg {
@@ -106,12 +140,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.editorActive = false
 	case dirFilesMsg:
 		index := len(m.list.Items())
+		var cmd tea.Cmd
 		for i, file := range msg.files {
-			m.list.InsertItem(index + i, fileItem{file})
+			cmd = m.list.InsertItem(index + i, fileItem{file})
 		}
+		return m, cmd
+	case verifyPasswordMsg:
+		m.passwordCorrect = msg.passwordsMatch
+		m.passwordVerified = true
+		m.err = msg.err
 		return m, nil
+	case tea.WindowSizeMsg:
+		h, v := docStyle.GetFrameSize()
+		m.list.SetSize(msg.Width-h, msg.Height-v)
 	}
 
+	if m.inPassword() {
+		return passwordUpdate(msg, m)
+	}
+	if !m.passwordCorrect {
+		return m, nil
+	}
 	if m.inNote() {
 		return noteUpdate(msg, m)
 	}
@@ -125,6 +174,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	if m.inPassword() {
+		return passwordView(m)
+	}
+
+	if !m.passwordCorrect {
+		if m.passwordVerified {
+			return "incorrect password or failed verifying password:\n\t" + m.err.Error()
+		} else {
+			return "verifying password..."
+		}
+	}
+
 	if m.inNote() {
 		return noteView(m)
 	}
@@ -135,6 +196,23 @@ func (m model) View() string {
 		return newNoteView(m)
 	}
 	return fileListView(m)
+}
+
+func passwordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
+	if msg, ok := msg.(tea.KeyMsg); ok {
+		msg := msg.String()
+		switch msg {
+		case "esc":
+			return m, tea.Quit
+    case "enter":
+			m.password = m.textInput.Value()
+      return m, verifyPassword(m.password)
+    }
+	}
+
+	var cmd tea.Cmd
+	m.textInput, cmd = m.textInput.Update(msg)
+	return m, cmd
 }
 
 func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
@@ -172,8 +250,7 @@ func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.resetChosen()
 			return m, nil
     case "enter":
-			v := m.textInput.Value()
-			m.newNoteName = v
+			m.newNoteName = m.textInput.Value()
       return m, nil
     }
 	}
@@ -198,14 +275,19 @@ func fileListUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				m.toNote(index)
 			}
 		}
-	case tea.WindowSizeMsg:
-		h, v := docStyle.GetFrameSize()
-		m.list.SetSize(msg.Width-h, msg.Height-v)
 	}
 
 	var cmd tea.Cmd
 	m.list, cmd = m.list.Update(msg)
 	return m, cmd
+}
+
+func passwordView(m model) string {
+	return fmt.Sprintf(
+		"Password?\n\n%s\n\n%s",
+		m.textInput.View(),
+		"(esc to quit)",
+	) + "\n"
 }
 
 func noteView(m model) string {
@@ -237,14 +319,7 @@ func fileListView(m model) string {
 }
 
 func main() {
-	items := []list.Item{
-		item{title: "New note", desc: "Write a new encrypted note"},
-	}
-
-	m := model{chosen: -1, list: list.New(items, list.NewDefaultDelegate(), 0, 0)}
-	m.list.Title = "My Fave Things"
-
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 
 	if err := p.Start(); err != nil {
 		fmt.Println("Error running program:", err)
