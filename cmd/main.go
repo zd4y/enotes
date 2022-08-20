@@ -11,8 +11,10 @@ import (
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/charmbracelet/glamour"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -41,6 +43,9 @@ type model struct {
 	password string
 	passwordCorrect bool
 	passwordVerified bool
+	noteContents string
+	noteViewport viewport.Model
+	loadingNote bool
 	textInput textinput.Model
 	err error
 }
@@ -52,8 +57,10 @@ func initialModel() model {
 
 	textInput := textinput.New()
 	textInput.Placeholder = "Password"
+	textInput.EchoMode = textinput.EchoPassword
 	textInput.Focus()
-	m := model{chosen: -1, list: list.New(items, list.NewDefaultDelegate(), 0, 0), textInput: textInput}
+
+	m := model{chosen: -1, list: list.New(items, list.NewDefaultDelegate(), 0, 0), textInput: textInput, noteViewport: viewport.New(30, 20)}
 	m.list.Title = "Notes"
 	return m
 }
@@ -111,6 +118,18 @@ func verifyPassword(password string) tea.Cmd {
 	}
 }
 
+type openNoteMsg struct {
+	note string
+	err error
+}
+
+func openNote(notePath string, password string) tea.Cmd {
+	return func() tea.Msg {
+		note, err := notes.OpenNote(notePath, password)
+		return openNoteMsg{note, err}
+	}
+}
+
 type dirFilesMsg struct { files []fs.FileInfo }
 
 func getDirFiles() tea.Msg {
@@ -135,22 +154,28 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case editorFinishedMsg:
 		if msg.err != nil {
 			m.err = msg.err
-			return m, tea.Quit
+			return m, nil
 		}
 		m.editorActive = false
 	case dirFilesMsg:
 		index := len(m.list.Items())
-		var cmd tea.Cmd
+		cmds := make([]tea.Cmd, len(msg.files))
 		for i, file := range msg.files {
-			cmd = m.list.InsertItem(index + i, fileItem{file})
+			cmd := m.list.InsertItem(index + i, fileItem{file})
+			cmds = append(cmds, cmd)
 		}
-		return m, cmd
+		return m, tea.Batch(cmds...)
 	case verifyPasswordMsg:
 		m.passwordCorrect = msg.passwordsMatch
 		m.passwordVerified = true
-		m.err = msg.err
+		if msg.err != nil {
+			m.err = msg.err
+		}
 		return m, nil
 	case tea.WindowSizeMsg:
+		m.noteViewport.Width = msg.Width
+		m.noteViewport.Height = msg.Height
+
 		h, v := docStyle.GetFrameSize()
 		m.list.SetSize(msg.Width-h, msg.Height-v)
 	}
@@ -216,9 +241,25 @@ func passwordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 }
 
 func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
-	if msg, ok := msg.(tea.KeyMsg); ok {
-		msg := msg.String()
-		switch msg {
+	switch msg := msg.(type) {
+	case openNoteMsg:
+		if msg.err != nil {
+			m.err = msg.err
+			return m, nil
+		}
+
+		m.loadingNote = false
+		m.noteContents = msg.note
+
+		out, err := glamour.Render(m.noteContents, "dark")
+		if err != nil {
+			m.err = err
+		}
+		m.noteViewport.SetContent(out)
+
+		return m, nil
+	case tea.KeyMsg:
+		switch msg := msg.String(); msg {
 		case "esc", "q":
 			m.resetChosen()
 			return m, nil
@@ -226,7 +267,10 @@ func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			return m, openEditor()
     }
 	}
-	return m, nil
+
+	var cmd tea.Cmd
+	m.noteViewport, cmd = m.noteViewport.Update(msg)
+	return m, cmd
 }
 
 func newNoteEditorUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
@@ -271,8 +315,12 @@ func fileListUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				m.textInput.Placeholder = "File name (leave empty for current date)"
 				m.textInput.Focus()
 				m.toNewNote()
+				return m, nil
 			} else {
 				m.toNote(index)
+				item := m.list.Items()[index].(fileItem)
+				m.loadingNote = true
+				return m, openNote(item.file.Name(), m.password)
 			}
 		}
 	}
@@ -291,15 +339,19 @@ func passwordView(m model) string {
 }
 
 func noteView(m model) string {
-	listItem := m.list.Items()[m.chosen]
-	switch item := listItem.(type) {
-	case item:
-		return fmt.Sprintf("in note %s", item.title)
-	case fileItem:
-		return fmt.Sprintf("in note %s", item.file.Name())
+	if m.loadingNote {
+		return "loading note..."
 	}
 
-	panic("unhandled item type")
+	if len(m.noteContents) > 0 {
+		return m.noteViewport.View()
+	}
+
+	if m.err != nil {
+		return "error loading note: " + m.err.Error()
+	}
+
+	panic("called note view without loading, contents or error")
 }
 
 func newNoteEditorView(m model) string {
@@ -319,7 +371,7 @@ func fileListView(m model) string {
 }
 
 func main() {
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
+	p := tea.NewProgram(initialModel(), tea.WithAltScreen(), tea.WithMouseCellMotion())
 
 	if err := p.Start(); err != nil {
 		fmt.Println("Error running program:", err)
