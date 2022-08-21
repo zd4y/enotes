@@ -125,7 +125,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.resetChosen()
 			return m, getDirFiles
 		}
-		return m, openNote(msg.path, m.password)
+		item := m.list.SelectedItem().(fileItem)
+		return m, openNote(item.file.Name(), m.password)
 	case dirFilesMsg:
 		index := len(m.list.Items())
 		cmds := make([]tea.Cmd, len(msg.files))
