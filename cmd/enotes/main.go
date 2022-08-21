@@ -109,16 +109,6 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = msg.err
 			return m, nil
 		}
-		innerMsg := msg.msg.(noteEditedMsg)
-		if innerMsg.err != nil {
-			m.err = innerMsg.err
-			return m, nil
-		}
-		err := innerMsg.done()
-		if err != nil {
-			m.err = err
-			return m, nil
-		}
 		m.loadingNote = true
 		if m.inNewNoteEditor() {
 			m.newNoteName = ""

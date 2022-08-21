@@ -15,34 +15,34 @@ import (
 type editorFinishedMsg struct {
 	path string
 	err  error
-	msg  tea.Msg
 }
 
-func openEditor(path string, callback func(error) tea.Msg) tea.Cmd {
+func openEditor(path string, callback func(error) error) tea.Cmd {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "vim"
 	}
 	c := exec.Command(editor, path)
 	return tea.ExecProcess(c, func(err error) tea.Msg {
-		msg := callback(err)
-		return editorFinishedMsg{path, err, msg}
+		if err != nil {
+			return editorFinishedMsg{err:err}
+		}
+		err = callback(err)
+		return editorFinishedMsg{path, err}
 	})
-}
-
-type noteEditedMsg struct {
-	done func() error
-	err  error
 }
 
 func createNote(notePath string, password string) tea.Cmd {
 	return func() tea.Msg {
 		tempNotePath, done, err := enotes.CreateNote(notePath, password)
 		if err != nil {
-			return noteEditedMsg{err: err}
+			return editorFinishedMsg{err: err}
 		}
-		return openEditor(tempNotePath, func(err error) tea.Msg {
-			return noteEditedMsg{done, err}
+		return openEditor(tempNotePath, func(err error) error {
+			if err != nil {
+				return err
+			}
+			return done()
 		})()
 	}
 }
@@ -51,10 +51,13 @@ func editNote(notePath string, password string) tea.Cmd {
 	return func() tea.Msg {
 		tempNotePath, done, err := enotes.EditNote(notePath, password)
 		if err != nil {
-			return noteEditedMsg{err: err}
+			return editorFinishedMsg{err: err}
 		}
-		return openEditor(tempNotePath, func(err error) tea.Msg {
-			return noteEditedMsg{done, err}
+		return openEditor(tempNotePath, func(err error) error {
+			if err != nil {
+				return err
+			}
+			return done()
 		})()
 	}
 }
