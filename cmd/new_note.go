@@ -13,10 +13,10 @@ func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		case "esc":
 			m.resetChosen()
 			return m, nil
-    case "enter":
+		case "enter":
 			m.newNoteName = m.textInput.Value()
-      return m, nil
-    }
+			return m, nil
+		}
 	}
 
 	var cmd tea.Cmd
@@ -31,4 +31,3 @@ func newNoteView(m model) string {
 		"(esc to quit)",
 	) + "\n"
 }
-

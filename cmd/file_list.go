@@ -31,7 +31,6 @@ func fileListUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-
 func fileListView(m model) string {
 	return docStyle.Render(m.list.View())
 }

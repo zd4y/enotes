@@ -12,10 +12,10 @@ func passwordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		switch msg {
 		case "esc":
 			return m, tea.Quit
-    case "enter":
+		case "enter":
 			m.password = m.textInput.Value()
-      return m, verifyPassword(m.password)
-    }
+			return m, verifyPassword(m.password)
+		}
 	}
 
 	var cmd tea.Cmd
@@ -30,4 +30,3 @@ func passwordView(m model) string {
 		"(esc to quit)",
 	) + "\n"
 }
-

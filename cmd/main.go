@@ -32,19 +32,19 @@ func (i fileItem) Description() string { return i.file.ModTime().String() }
 func (i fileItem) FilterValue() string { return i.file.Name() }
 
 type model struct {
-	list list.Model
-	chosen int
-	editorActive bool
-	newNoteName string
-	password string
-	passwordCorrect bool
+	list             list.Model
+	chosen           int
+	editorActive     bool
+	newNoteName      string
+	password         string
+	passwordCorrect  bool
 	passwordVerified bool
-	noteContents string
-	noteViewport viewport.Model
-	spinner spinner.Model
-	loadingNote bool
-	textInput textinput.Model
-	err error
+	noteContents     string
+	noteViewport     viewport.Model
+	spinner          spinner.Model
+	loadingNote      bool
+	textInput        textinput.Model
+	err              error
 }
 
 func initialModel() model {
@@ -113,7 +113,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		index := len(m.list.Items())
 		cmds := make([]tea.Cmd, len(msg.files))
 		for i, file := range msg.files {
-			cmd := m.list.InsertItem(index + i, fileItem{file})
+			cmd := m.list.InsertItem(index+i, fileItem{file})
 			cmds = append(cmds, cmd)
 		}
 		return m, tea.Batch(cmds...)

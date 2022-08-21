@@ -32,7 +32,7 @@ func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "e":
 			return m, openEditor()
-    }
+		}
 	}
 
 	var cmd tea.Cmd
@@ -55,4 +55,3 @@ func noteView(m model) string {
 
 	panic("called note view without loading, contents or error")
 }
-

@@ -27,19 +27,19 @@ func openEditor() tea.Cmd {
 
 type verifyPasswordMsg struct {
 	passwordsMatch bool
-	err error
+	err            error
 }
 
 func verifyPassword(password string) tea.Cmd {
 	return func() tea.Msg {
 		err := notes.VerifyPassword(password)
-		return verifyPasswordMsg { err == nil, err }
+		return verifyPasswordMsg{err == nil, err}
 	}
 }
 
 type openNoteMsg struct {
 	note string
-	err error
+	err  error
 }
 
 func openNote(notePath string, password string) tea.Cmd {
@@ -49,7 +49,7 @@ func openNote(notePath string, password string) tea.Cmd {
 	}
 }
 
-type dirFilesMsg struct { files []fs.FileInfo }
+type dirFilesMsg struct{ files []fs.FileInfo }
 
 func getDirFiles() tea.Msg {
 	files, err := ioutil.ReadDir("./")
@@ -59,4 +59,3 @@ func getDirFiles() tea.Msg {
 	}
 	return dirFilesMsg{files}
 }
-
