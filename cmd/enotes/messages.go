@@ -7,7 +7,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/zd4y/notes/pkg/notes"
+	"github.com/zd4y/enotes/pkg/enotes"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -37,7 +37,7 @@ type noteEditedMsg struct {
 
 func createNote(notePath string, password string) tea.Cmd {
 	return func() tea.Msg {
-		tempNotePath, done, err := notes.CreateNote(notePath, password)
+		tempNotePath, done, err := enotes.CreateNote(notePath, password)
 		if err != nil {
 			return noteEditedMsg{err: err}
 		}
@@ -49,7 +49,7 @@ func createNote(notePath string, password string) tea.Cmd {
 
 func editNote(notePath string, password string) tea.Cmd {
 	return func() tea.Msg {
-		tempNotePath, done, err := notes.EditNote(notePath, password)
+		tempNotePath, done, err := enotes.EditNote(notePath, password)
 		if err != nil {
 			return noteEditedMsg{err: err}
 		}
@@ -66,7 +66,7 @@ type verifyPasswordMsg struct {
 
 func verifyPassword(password string) tea.Cmd {
 	return func() tea.Msg {
-		err := notes.VerifyPassword(password)
+		err := enotes.VerifyPassword(password)
 		return verifyPasswordMsg{err == nil, err}
 	}
 }
@@ -78,7 +78,7 @@ type openNoteMsg struct {
 
 func openNote(notePath string, password string) tea.Cmd {
 	return func() tea.Msg {
-		note, err := notes.OpenNote(notePath, password)
+		note, err := enotes.OpenNote(notePath, password)
 		return openNoteMsg{note, err}
 	}
 }

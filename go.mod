@@ -1,4 +1,4 @@
-module github.com/zd4y/notes
+module github.com/zd4y/enotes
 
 go 1.19
 

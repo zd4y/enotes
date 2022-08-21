@@ -1,4 +1,4 @@
-package notes
+package enotes
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 	"filippo.io/age"
 )
 
-const passwordFileName = ".notes-password.age"
+const passwordFileName = ".enotes-password.age"
 
 func VerifyPassword(password string) error {
 	passwordFile, err := os.Open(passwordFileName)
