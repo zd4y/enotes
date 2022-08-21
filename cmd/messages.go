@@ -35,6 +35,18 @@ type noteEditedMsg struct {
 	err  error
 }
 
+func createNote(notePath string, password string) tea.Cmd {
+	return func() tea.Msg {
+		tempNotePath, done, err := notes.CreateNote(notePath, password)
+		if err != nil {
+			return noteEditedMsg{err: err}
+		}
+		return openEditor(tempNotePath, func(err error) tea.Msg {
+			return noteEditedMsg{done, err}
+		})()
+	}
+}
+
 func editNote(notePath string, password string) tea.Cmd {
 	return func() tea.Msg {
 		tempNotePath, done, err := notes.EditNote(notePath, password)

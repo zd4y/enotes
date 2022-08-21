@@ -53,13 +53,9 @@ func noteView(m model) string {
 		return fmt.Sprintf("%s Loading editor\n", m.spinner.View())
 	}
 
-	if len(m.noteContents) > 0 {
-		return m.noteViewport.View()
-	}
-
 	if m.err != nil {
 		return "error loading note: " + m.err.Error()
 	}
 
-	panic("called note view without loading, contents or error")
+	return m.noteViewport.View()
 }
