@@ -10,12 +10,12 @@ import (
 func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case openNoteMsg:
+		m.loadingNote = false
 		if msg.err != nil {
 			m.err = msg.err
 			return m, nil
 		}
 
-		m.loadingNote = false
 		m.noteContents = msg.note
 
 		out, err := glamour.Render(m.noteContents, "dark")
