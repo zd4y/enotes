@@ -128,10 +128,15 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		item := m.list.SelectedItem().(fileItem)
 		return m, openNote(item.file.Name(), m.password)
 	case dirFilesMsg:
-		index := len(m.list.Items())
+		itemsLen := len(m.list.Items())
 		cmds := make([]tea.Cmd, len(msg.files))
 		for i, file := range msg.files {
-			cmd := m.list.InsertItem(index+i, fileItem{file})
+			var cmd tea.Cmd
+			if itemsLen > i+1 {
+				cmd = m.list.SetItem(i+1, fileItem{file})
+			} else {
+				cmd = m.list.InsertItem(i+1, fileItem{file})
+			}
 			cmds = append(cmds, cmd)
 		}
 		return m, tea.Batch(cmds...)
