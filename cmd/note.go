@@ -31,7 +31,11 @@ func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.resetChosen()
 			return m, nil
 		case "e":
-			return m, openEditor()
+			if !m.loadingNote {
+				m.editorActive = true
+				item := m.list.SelectedItem().(fileItem)
+				return m, editNote(item.file.Name(), m.password)
+			}
 		}
 	}
 
@@ -43,6 +47,10 @@ func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 func noteView(m model) string {
 	if m.loadingNote {
 		return fmt.Sprintf("%s Decrypting note\n", m.spinner.View())
+	}
+
+	if m.editorActive {
+		return fmt.Sprintf("%s Loading editor\n", m.spinner.View())
 	}
 
 	if len(m.noteContents) > 0 {

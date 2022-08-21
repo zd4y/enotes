@@ -104,11 +104,22 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case editorFinishedMsg:
+		m.editorActive = false
 		if msg.err != nil {
 			m.err = msg.err
 			return m, nil
 		}
-		m.editorActive = false
+		if msg, ok := msg.msg.(noteEditedMsg); ok {
+			err := msg.done()
+			if err != nil {
+				m.err = msg.err
+				return m, nil
+			}
+			item := m.list.SelectedItem().(fileItem)
+			m.loadingNote = true
+			return m, openNote(item.file.Name(), m.password)
+		}
+		return m, nil
 	case dirFilesMsg:
 		index := len(m.list.Items())
 		cmds := make([]tea.Cmd, len(msg.files))

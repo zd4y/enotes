@@ -19,7 +19,7 @@ func fileListUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				return m, textinput.Blink
 			} else {
 				m.toNote(index)
-				item := m.list.Items()[index].(fileItem)
+				item := m.list.SelectedItem().(fileItem)
 				m.loadingNote = true
 				return m, openNote(item.file.Name(), m.password)
 			}

@@ -16,7 +16,8 @@ func newNoteEditorUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.editorActive = true
-	return m, openEditor()
+	item := m.list.SelectedItem().(fileItem)
+	return m, openEditor(item.file.Name(), func(error) tea.Msg { return nil })
 }
 
 func newNoteEditorView(m model) string {

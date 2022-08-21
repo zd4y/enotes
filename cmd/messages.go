@@ -12,17 +12,39 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type editorFinishedMsg struct{ err error }
+type editorFinishedMsg struct{
+	path string
+	err error
+	msg tea.Msg
+}
 
-func openEditor() tea.Cmd {
+func openEditor(path string, callback func(error) tea.Msg) tea.Cmd {
 	editor := os.Getenv("EDITOR")
 	if editor == "" {
 		editor = "vim"
 	}
-	c := exec.Command(editor)
+	c := exec.Command(editor, path)
 	return tea.ExecProcess(c, func(err error) tea.Msg {
-		return editorFinishedMsg{err}
+		msg := callback(err)
+		return editorFinishedMsg{path, err, msg}
 	})
+}
+
+type noteEditedMsg struct {
+	done func() error
+	err error
+}
+
+func editNote(notePath string, password string) tea.Cmd {
+	return func() tea.Msg {
+		tempNotePath, done, err := notes.EditNote(notePath, password)
+		if err != nil {
+			return noteEditedMsg{err: err}
+		}
+		return openEditor(tempNotePath, func(err error) tea.Msg{
+			return noteEditedMsg{done, err}
+		})()
+	}
 }
 
 type verifyPasswordMsg struct {
