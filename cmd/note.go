@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 )
@@ -40,7 +42,7 @@ func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 func noteView(m model) string {
 	if m.loadingNote {
-		return "loading note..."
+		return fmt.Sprintf("%s Decrypting note\n", m.spinner.View())
 	}
 
 	if len(m.noteContents) > 0 {

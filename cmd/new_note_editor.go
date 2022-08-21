@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -18,5 +20,5 @@ func newNoteEditorUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 }
 
 func newNoteEditorView(m model) string {
-	return "loading editor"
+	return fmt.Sprintf("%s Loading editor\n", m.spinner.View())
 }

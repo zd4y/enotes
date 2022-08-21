@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/charmbracelet/bubbles/list"
+	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
@@ -40,6 +41,7 @@ type model struct {
 	passwordVerified bool
 	noteContents string
 	noteViewport viewport.Model
+	spinner spinner.Model
 	loadingNote bool
 	textInput textinput.Model
 	err error
@@ -55,7 +57,10 @@ func initialModel() model {
 	textInput.EchoMode = textinput.EchoPassword
 	textInput.Focus()
 
-	m := model{chosen: -1, list: list.New(items, list.NewDefaultDelegate(), 0, 0), textInput: textInput, noteViewport: viewport.New(30, 20)}
+	s := spinner.New()
+	s.Spinner = spinner.Points
+
+	m := model{chosen: -1, list: list.New(items, list.NewDefaultDelegate(), 0, 0), textInput: textInput, noteViewport: viewport.New(30, 20), spinner: s}
 	m.list.Title = "Notes"
 	return m
 }
@@ -89,7 +94,7 @@ func (m *model) toNote(inIndex int) {
 }
 
 func (m model) Init() tea.Cmd {
-	return tea.Batch(textinput.Blink, getDirFiles)
+	return tea.Batch(textinput.Blink, getDirFiles, m.spinner.Tick)
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -125,6 +130,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		h, v := docStyle.GetFrameSize()
 		m.list.SetSize(msg.Width-h, msg.Height-v)
+	case spinner.TickMsg:
+		var cmd tea.Cmd
+		m.spinner, cmd = m.spinner.Update(msg)
+		return m, cmd
 	}
 
 	if m.inPassword() {
@@ -154,7 +163,7 @@ func (m model) View() string {
 		if m.passwordVerified {
 			return "incorrect password or failed verifying password:\n\t" + m.err.Error()
 		} else {
-			return "verifying password..."
+			return fmt.Sprintf("%s Verifying password\n", m.spinner.View())
 		}
 	}
 
