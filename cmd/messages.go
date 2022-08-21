@@ -12,10 +12,10 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 )
 
-type editorFinishedMsg struct{
+type editorFinishedMsg struct {
 	path string
-	err error
-	msg tea.Msg
+	err  error
+	msg  tea.Msg
 }
 
 func openEditor(path string, callback func(error) tea.Msg) tea.Cmd {
@@ -32,7 +32,7 @@ func openEditor(path string, callback func(error) tea.Msg) tea.Cmd {
 
 type noteEditedMsg struct {
 	done func() error
-	err error
+	err  error
 }
 
 func editNote(notePath string, password string) tea.Cmd {
@@ -41,7 +41,7 @@ func editNote(notePath string, password string) tea.Cmd {
 		if err != nil {
 			return noteEditedMsg{err: err}
 		}
-		return openEditor(tempNotePath, func(err error) tea.Msg{
+		return openEditor(tempNotePath, func(err error) tea.Msg {
 			return noteEditedMsg{done, err}
 		})()
 	}
