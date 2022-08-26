@@ -2,6 +2,7 @@ package enotes
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -16,6 +17,8 @@ var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
 const passwordFileName = ".enotes-password.age"
+
+var IncorrectPasswordError = errors.New("incorrect password")
 
 func NewPassword(password string) error {
 	content := fmt.Sprint(seededRand.Int())
@@ -32,6 +35,9 @@ func VerifyPassword(password string) error {
 		return err
 	}
 	_, err = age.Decrypt(passwordFile, identity)
+	if _, ok := err.(*age.NoIdentityMatchError); ok {
+		return IncorrectPasswordError
+	}
 	return err
 }
 

@@ -54,7 +54,7 @@ func noteView(m model) string {
 	}
 
 	if m.err != nil {
-		return "error loading note: " + m.err.Error()
+		return "error loading note: " + m.err.Error() + "\n"
 	}
 
 	return m.noteViewport.View()

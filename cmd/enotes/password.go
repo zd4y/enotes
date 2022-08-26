@@ -11,7 +11,8 @@ func passwordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		msg := msg.String()
 		switch msg {
 		case "esc":
-			return m, tea.Quit
+			m.quitting = true
+			return m, nil
 		case "enter":
 			m.password = m.textInput.Value()
 			return m, verifyPassword(m.password)
@@ -25,8 +26,8 @@ func passwordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 func passwordView(m model) string {
 	return fmt.Sprintf(
-		"Password?\n\n%s\n\n%s",
+		"Password?\n\n%s\n\n%s\n",
 		m.textInput.View(),
 		"(esc to quit)",
-	) + "\n"
+	)
 }

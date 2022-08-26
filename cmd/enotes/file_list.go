@@ -9,6 +9,9 @@ func fileListUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg := msg.String(); msg {
+		case "q", "esc":
+			m.quitting = true
+			return m, nil
 		case "enter":
 			index := m.list.Index()
 			if index == 0 {

@@ -26,8 +26,8 @@ func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 func newNoteView(m model) string {
 	return fmt.Sprintf(
-		"New note filename?\n\n%s\n\n%s",
+		"New note filename?\n\n%s\n\n%s\n",
 		m.textInput.View(),
 		"(esc to quit)",
-	) + "\n"
+	)
 }

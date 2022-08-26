@@ -12,24 +12,26 @@ func newPasswordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		msg := msg.String()
 		switch msg {
 		case "esc":
-			return m, tea.Quit
+			m.quitting = true
+			return m, nil
 		case "enter":
 			switch m.newPasswordFocus {
 			case 0:
 				m.password = m.textInput.Value()
 				m.newPasswordFocus += 1
 				m.textInput.Blur()
-				cmd := m.pwConfirmTextInput.Focus()
-				return m, cmd
+				return m, m.pwConfirmTextInput.Focus()
 			case 1:
 				confirmPw := m.pwConfirmTextInput.Value()
 				m.pwConfirmTextInput.Blur()
 				cmd := m.textInput.Focus()
 				if m.password == confirmPw {
-					return m, newPassword(m.password)
+					m.creatingNewPassword = true
+					return m, tea.Batch(newPassword(m.password), cmd)
 				} else {
 					m.newPasswordsDontMatch = true
-					return m, cmd
+					m.quitting = true
+					return m, nil
 				}
 			}
 		}
@@ -48,13 +50,18 @@ func newPasswordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 }
 
 func newPasswordView(m model) string {
-	if m.newPasswordsDontMatch {
-		return "Password and confirm password didn't match"
+	if m.creatingNewPassword {
+		return fmt.Sprintf("%s Creating password\n", m.spinner.View())
 	}
+
+	if m.newPasswordsDontMatch {
+		return "Password and confirm password didn't match\n"
+	}
+
 	return fmt.Sprintf(
-		"New Password: %s\n\nConfirm password: %s\n\n%s",
+		"New Password: %s\n\nConfirm password: %s\n\n%s\n",
 		m.textInput.View(),
 		m.pwConfirmTextInput.View(),
 		"(esc to quit)",
-	) + "\n"
+	)
 }

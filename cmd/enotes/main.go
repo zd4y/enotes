@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/zd4y/enotes/pkg/enotes"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -33,18 +34,19 @@ func (i fileItem) Description() string { return i.file.ModTime().String() }
 func (i fileItem) FilterValue() string { return i.file.Name() }
 
 type model struct {
+	quitting bool
 	list                  list.Model
 	chosen                int
 	editorActive          bool
 	newNoteName           string
 	password              string
-	passwordCorrect       bool
 	passwordVerified      bool
 	noteContents          string
 	noteViewport          viewport.Model
 	spinner               spinner.Model
 	loadingNote           bool
 	textInput             textinput.Model
+	creatingNewPassword   bool
 	newPasswordFocus      int
 	newPasswordsDontMatch bool
 	pwConfirmTextInput    *textinput.Model
@@ -106,10 +108,15 @@ func (m model) Init() tea.Cmd {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	if m.quitting || m.err != nil {
+		return m, tea.Quit
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		if msg.String() == "ctrl+c" {
-			return m, tea.Quit
+			m.quitting = true
+			return m, nil
 		}
 	case editorFinishedMsg:
 		m.editorActive = false
@@ -145,8 +152,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.pwConfirmTextInput = nil
 		m.password = ""
-		m.passwordCorrect = false
-		m.passwordVerified = false
+		m.creatingNewPassword = false
 		m.textInput.SetValue("")
 		return m, textinput.Blink
 	case verifyPasswordMsg:
@@ -159,8 +165,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.err = msg.err
 			}
+			return m, nil
 		}
-		m.passwordCorrect = msg.passwordsMatch
+		if !msg.passwordsMatch {
+			m.err = enotes.IncorrectPasswordError
+			return m, nil
+		}
 		m.passwordVerified = true
 		return m, nil
 	case tea.WindowSizeMsg:
@@ -181,7 +191,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if m.inPassword() {
 		return passwordUpdate(msg, m)
 	}
-	if !m.passwordCorrect {
+	if !m.passwordVerified {
 		return m, nil
 	}
 	if m.inNote() {
@@ -197,6 +207,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	if m.quitting {
+		return ""
+	}
+
+	if m.err != nil {
+		return m.err.Error() + "\n"
+	}
+
 	if m.inNewPassword() {
 		return newPasswordView(m)
 	}
@@ -205,12 +223,8 @@ func (m model) View() string {
 		return passwordView(m)
 	}
 
-	if !m.passwordCorrect {
-		if m.passwordVerified {
-			return "incorrect password or failed verifying password:\n\t" + m.err.Error()
-		} else {
-			return fmt.Sprintf("%s Verifying password\n", m.spinner.View())
-		}
+	if !m.passwordVerified {
+		return fmt.Sprintf("%s Verifying password\n", m.spinner.View())
 	}
 
 	if m.inNote() {
@@ -226,7 +240,7 @@ func (m model) View() string {
 }
 
 func main() {
-	p := tea.NewProgram(initialModel(), tea.WithAltScreen(), tea.WithMouseCellMotion())
+	p := tea.NewProgram(initialModel(), tea.WithMouseCellMotion())
 
 	if err := p.Start(); err != nil {
 		fmt.Println("Error running program:", err)
