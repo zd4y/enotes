@@ -35,6 +35,7 @@ func (i fileItem) FilterValue() string { return i.file.Name() }
 
 type model struct {
 	quitting            bool
+	width               int
 	list                list.Model
 	chosen              int
 	editorActive        bool
@@ -173,7 +174,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.passwordVerified = true
 		return m, nil
 	case tea.WindowSizeMsg:
-		m.noteViewport.Width = msg.Width
+		m.width = min(msg.Width, 100)
+		m.noteViewport.Width = m.width
 		m.noteViewport.Height = msg.Height
 
 		h, v := docStyle.GetFrameSize()
@@ -236,6 +238,13 @@ func (m model) View() string {
 		return newNoteView(m)
 	}
 	return fileListView(m)
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func main() {

@@ -17,14 +17,6 @@ func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		}
 
 		m.noteContents = msg.note
-
-		out, err := glamour.Render(m.noteContents, "dark")
-		if err != nil {
-			m.err = err
-		}
-		m.noteViewport.SetContent(out)
-
-		return m, nil
 	case tea.KeyMsg:
 		switch msg := msg.String(); msg {
 		case "esc", "q":
@@ -38,6 +30,16 @@ func noteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
+
+	r, err := glamour.NewTermRenderer(glamour.WithStandardStyle("dark"), glamour.WithWordWrap(m.width))
+	if err != nil {
+		m.err = err
+	}
+	out, err := r.Render(m.noteContents)
+	if err != nil {
+		m.err = err
+	}
+	m.noteViewport.SetContent(out)
 
 	var cmd tea.Cmd
 	m.noteViewport, cmd = m.noteViewport.Update(msg)
