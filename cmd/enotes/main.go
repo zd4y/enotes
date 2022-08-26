@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -44,6 +45,9 @@ type model struct {
 	spinner          spinner.Model
 	loadingNote      bool
 	textInput        textinput.Model
+	newPasswordFocus int
+	newPasswordsDontMatch bool
+	pwConfirmTextInput *textinput.Model
 	err              error
 }
 
@@ -63,6 +67,10 @@ func initialModel() model {
 	m := model{chosen: -1, list: list.New(items, list.NewDefaultDelegate(), 0, 0), textInput: textInput, noteViewport: viewport.New(30, 20), spinner: s}
 	m.list.Title = "Notes"
 	return m
+}
+
+func (m model) inNewPassword() bool {
+	return m.pwConfirmTextInput != nil
 }
 
 func (m model) inPassword() bool {
@@ -130,12 +138,30 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 		return m, tea.Batch(cmds...)
-	case verifyPasswordMsg:
-		m.passwordCorrect = msg.passwordsMatch
-		m.passwordVerified = true
+	case newPasswordMsg:
 		if msg.err != nil {
 			m.err = msg.err
+			return m, nil
 		}
+		m.pwConfirmTextInput = nil
+		m.password = ""
+		m.passwordCorrect = false
+		m.passwordVerified = false
+		m.textInput.SetValue("")
+		return m, textinput.Blink
+	case verifyPasswordMsg:
+		if msg.err != nil {
+			if errors.Is(msg.err, fs.ErrNotExist) {
+				ti := textinput.New()
+				m.pwConfirmTextInput = &ti
+				m.pwConfirmTextInput.Placeholder = "Confirm Password"
+				m.pwConfirmTextInput.EchoMode = textinput.EchoPassword
+			} else {
+				m.err = msg.err
+			}
+		}
+		m.passwordCorrect = msg.passwordsMatch
+		m.passwordVerified = true
 		return m, nil
 	case tea.WindowSizeMsg:
 		m.noteViewport.Width = msg.Width
@@ -149,6 +175,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, cmd
 	}
 
+	if m.inNewPassword() {
+		return newPasswordUpdate(msg, m)
+	}
 	if m.inPassword() {
 		return passwordUpdate(msg, m)
 	}
@@ -168,6 +197,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m model) View() string {
+	if m.inNewPassword() {
+		return newPasswordView(m)
+	}
+
 	if m.inPassword() {
 		return passwordView(m)
 	}

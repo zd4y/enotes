@@ -62,6 +62,17 @@ func editNote(notePath string, password string) tea.Cmd {
 	}
 }
 
+type newPasswordMsg struct {
+	err error
+}
+
+func newPassword(password string) tea.Cmd {
+	return func() tea.Msg {
+		err := enotes.NewPassword(password)
+		return newPasswordMsg { err }
+	}
+}
+
 type verifyPasswordMsg struct {
 	passwordsMatch bool
 	err            error

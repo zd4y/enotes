@@ -2,14 +2,25 @@ package enotes
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"time"
 
 	"filippo.io/age"
 )
 
+var seededRand *rand.Rand = rand.New(
+	rand.NewSource(time.Now().UnixNano()))
+
 const passwordFileName = ".enotes-password.age"
+
+func NewPassword(password string) error {
+	content := fmt.Sprint(seededRand.Int())
+	return encrypt([]byte(content), passwordFileName, password)
+}
 
 func VerifyPassword(password string) error {
 	passwordFile, err := os.Open(passwordFileName)
@@ -105,6 +116,10 @@ func encryptFile(srcPath string, dstPath string, password string) error {
 		return err
 	}
 
+	return encrypt(srcBytes, dstPath, password)
+}
+
+func encrypt(content []byte, dstPath string, password string) error {
 	recipient, err := age.NewScryptRecipient(password)
 	if err != nil {
 		return err
@@ -120,7 +135,7 @@ func encryptFile(srcPath string, dstPath string, password string) error {
 		return err
 	}
 
-	_, err = w.Write(srcBytes)
+	_, err = w.Write(content)
 	if err != nil {
 		return err
 	}
