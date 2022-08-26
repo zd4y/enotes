@@ -33,22 +33,22 @@ func (i fileItem) Description() string { return i.file.ModTime().String() }
 func (i fileItem) FilterValue() string { return i.file.Name() }
 
 type model struct {
-	list             list.Model
-	chosen           int
-	editorActive     bool
-	newNoteName      string
-	password         string
-	passwordCorrect  bool
-	passwordVerified bool
-	noteContents     string
-	noteViewport     viewport.Model
-	spinner          spinner.Model
-	loadingNote      bool
-	textInput        textinput.Model
-	newPasswordFocus int
+	list                  list.Model
+	chosen                int
+	editorActive          bool
+	newNoteName           string
+	password              string
+	passwordCorrect       bool
+	passwordVerified      bool
+	noteContents          string
+	noteViewport          viewport.Model
+	spinner               spinner.Model
+	loadingNote           bool
+	textInput             textinput.Model
+	newPasswordFocus      int
 	newPasswordsDontMatch bool
-	pwConfirmTextInput *textinput.Model
-	err              error
+	pwConfirmTextInput    *textinput.Model
+	err                   error
 }
 
 func initialModel() model {

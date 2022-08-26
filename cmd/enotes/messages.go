@@ -25,7 +25,7 @@ func openEditor(path string, callback func(error) error) tea.Cmd {
 	c := exec.Command(editor, path)
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		if err != nil {
-			return editorFinishedMsg{err:err}
+			return editorFinishedMsg{err: err}
 		}
 		err = callback(err)
 		return editorFinishedMsg{path, err}
@@ -69,7 +69,7 @@ type newPasswordMsg struct {
 func newPassword(password string) tea.Cmd {
 	return func() tea.Msg {
 		err := enotes.NewPassword(password)
-		return newPasswordMsg { err }
+		return newPasswordMsg{err}
 	}
 }
 
