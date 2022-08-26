@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -29,8 +30,7 @@ func newPasswordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 					m.creatingNewPassword = true
 					return m, tea.Batch(newPassword(m.password), cmd)
 				} else {
-					m.newPasswordsDontMatch = true
-					m.quitting = true
+					m.err = errors.New("Password and confirm password didn't match")
 					return m, nil
 				}
 			}
@@ -52,10 +52,6 @@ func newPasswordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 func newPasswordView(m model) string {
 	if m.creatingNewPassword {
 		return fmt.Sprintf("%s Creating password\n", m.spinner.View())
-	}
-
-	if m.newPasswordsDontMatch {
-		return "Password and confirm password didn't match\n"
 	}
 
 	return fmt.Sprintf(
