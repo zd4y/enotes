@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/zd4y/enotes/pkg/enotes"
 
@@ -22,7 +23,10 @@ func openEditor(path string, callback func(error) error) tea.Cmd {
 	if editor == "" {
 		editor = "vim"
 	}
-	c := exec.Command(editor, path)
+	editorCmd := strings.Split(editor, " ")
+	editor, args := editorCmd[0], editorCmd[1:]
+	args = append(args, path)
+	c := exec.Command(editor, args...)
 	return tea.ExecProcess(c, func(err error) tea.Msg {
 		if err != nil {
 			return editorFinishedMsg{err: err}
