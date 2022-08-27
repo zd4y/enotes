@@ -184,9 +184,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.passwordVerified = true
 		return m, nil
 	case tea.WindowSizeMsg:
+		headerHeight := lipgloss.Height(m.noteHeaderView())
+		footerHeight := lipgloss.Height(m.noteFooterView())
+		verticalMarginHeight := headerHeight + footerHeight
+
 		m.width = min(msg.Width, 100)
 		m.noteViewport.Width = m.width
-		m.noteViewport.Height = msg.Height
+		m.noteViewport.Height = msg.Height - verticalMarginHeight
+		m.noteViewport.YPosition = headerHeight
 
 		h, v := docStyle.GetFrameSize()
 		m.list.SetSize(msg.Width-h, msg.Height-v)
