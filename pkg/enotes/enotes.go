@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"filippo.io/age"
@@ -16,9 +17,17 @@ import (
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
-const passwordFileName = ".enotes-password.age"
+const (
+	noteExt          = ".md"
+	noteSuffix       = noteExt + ".age"
+	passwordFileName = ".enotes-password.age"
+)
 
 var IncorrectPasswordError = errors.New("incorrect password")
+
+func PasswordExists() (bool, error) {
+	return pathExists(passwordFileName)
+}
 
 func NewPassword(password string) error {
 	content := fmt.Sprint(seededRand.Int())
@@ -41,12 +50,16 @@ func VerifyPassword(password string) error {
 	return err
 }
 
-func PasswordExists() (bool, error) {
-	return pathExists(passwordFileName)
+func IsNote(path string) bool {
+	return strings.HasSuffix(path, noteSuffix)
 }
 
 func NoteExists(path string) (bool, error) {
 	return pathExists(path)
+}
+
+func NoteName(path string) string {
+	return strings.TrimSuffix(path, noteSuffix)
 }
 
 func OpenNote(path string, password string) (string, error) {
@@ -57,9 +70,12 @@ func OpenNote(path string, password string) (string, error) {
 	return bytes.String(), nil
 }
 
-func CreateNote(path string, password string) (string, func() error, error) {
+func CreateNote(name string, password string) (string, func() error, error) {
+	path := name + noteSuffix
+	prefix := name + ".*" + noteExt
+
 	tempFileName, done, err := useTempFile(
-		path,
+		prefix,
 		func(tempFile *os.File) error { return nil },
 	)
 	if err != nil {
@@ -76,13 +92,16 @@ func CreateNote(path string, password string) (string, func() error, error) {
 }
 
 func EditNote(path string, password string) (string, func() error, error) {
+	name := NoteName(path)
+	prefix := name + ".*" + noteExt
+
 	noteBytes, err := decrypt(path, password)
 	if err != nil {
 		return "", nil, err
 	}
 
 	tempFileName, done, err := useTempFile(
-		path,
+		prefix,
 		func(tempFile *os.File) error {
 			_, err = tempFile.Write(noteBytes.Bytes())
 			return err

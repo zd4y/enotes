@@ -7,10 +7,15 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/glamour"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/zd4y/enotes/pkg/enotes"
 )
 
 var (
-	bold      = lipgloss.NewStyle().Bold(true)
+	bold       = lipgloss.NewStyle().Bold(true)
+	titleStyle = lipgloss.NewStyle().
+			Background(lipgloss.Color("62")).
+			Foreground(lipgloss.Color("230")).
+			Padding(0, 1)
 	keyStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#626262"))
 	descStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("#4A4A4A"))
 	sepStyle  = lipgloss.NewStyle().Foreground(lipgloss.Color("#3C3C3C"))
@@ -79,8 +84,8 @@ func (m model) noteHeaderView() string {
 	if !ok {
 		return ""
 	}
-	title := fmt.Sprintf("File: %s", bold.Render(item.file.Name()))
-	return title
+	title := enotes.NoteName(item.file.Name())
+	return titleStyle.Render(title)
 }
 
 func (m model) noteFooterView() string {

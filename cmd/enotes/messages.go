@@ -36,9 +36,9 @@ func openEditor(path string, callback func(error) error) tea.Cmd {
 	})
 }
 
-func createNote(notePath string, password string) tea.Cmd {
+func createNote(noteName string, password string) tea.Cmd {
 	return func() tea.Msg {
-		tempNotePath, done, err := enotes.CreateNote(notePath, password)
+		tempNotePath, done, err := enotes.CreateNote(noteName, password)
 		if err != nil {
 			return editorFinishedMsg{err: err}
 		}

@@ -16,7 +16,7 @@ func fileListUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			index := m.list.Index()
 			if index == 0 {
 				m.textInput = textinput.New()
-				m.textInput.Placeholder = "File name (leave empty for current date)"
+				m.textInput.Placeholder = "New note name (leave empty for current date)"
 				m.textInput.Focus()
 				m.toNewNote()
 				return m, textinput.Blink

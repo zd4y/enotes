@@ -18,7 +18,7 @@ func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		case "enter":
 			newNotePath := m.textInput.Value()
 			if newNotePath == "" {
-				newNotePath = time.Now().Format(time.Stamp) + ".md.age"
+				newNotePath = time.Now().Format(time.Stamp)
 			}
 			if ok, err := enotes.NoteExists(newNotePath); ok {
 				return m, tea.Println("Note already exists")
@@ -26,7 +26,7 @@ func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				m.err = err
 				return m, nil
 			}
-			m.newNotePath = newNotePath
+			m.newNoteName = newNotePath
 			return m, nil
 		}
 	}
@@ -38,7 +38,7 @@ func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 
 func newNoteView(m model) string {
 	return fmt.Sprintf(
-		"New note filename?\n\n%s\n\n%s\n",
+		"New note name?\n\n%s\n\n%s\n",
 		m.textInput.View(),
 		"(esc to quit)",
 	)

@@ -30,7 +30,7 @@ type fileItem struct {
 }
 
 func (i fileItem) Title() string {
-	return i.file.Name()
+	return enotes.NoteName(i.file.Name())
 }
 
 func (i fileItem) Description() string {
@@ -47,7 +47,7 @@ type model struct {
 	list                list.Model
 	chosen              int
 	editorActive        bool
-	newNotePath         string
+	newNoteName         string
 	password            string
 	passwordVerified    bool
 	noteContents        string
@@ -114,7 +114,7 @@ func (m model) inNewNote() bool {
 }
 
 func (m model) inNewNoteEditor() bool {
-	return len(m.newNotePath) > 0
+	return len(m.newNoteName) > 0
 }
 
 func (m *model) resetChosen() {
@@ -152,7 +152,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.loadingNote = true
 		if m.inNewNoteEditor() {
-			m.newNotePath = ""
+			m.newNoteName = ""
 			m.resetChosen()
 			return m, getDirFiles
 		}
@@ -162,6 +162,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		itemsLen := len(m.list.Items())
 		cmds := make([]tea.Cmd, 0, len(msg.files))
 		for i, file := range msg.files {
+			if !enotes.IsNote(file.Name()) {
+				continue
+			}
 			var cmd tea.Cmd
 			if itemsLen > i+1 {
 				cmd = m.list.SetItem(i+1, fileItem{file})
