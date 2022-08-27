@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"time"
 
 	"github.com/charmbracelet/bubbles/list"
 	"github.com/charmbracelet/bubbles/spinner"
@@ -28,9 +29,17 @@ type fileItem struct {
 	file fs.FileInfo
 }
 
-func (i fileItem) Title() string       { return i.file.Name() }
-func (i fileItem) Description() string { return i.file.ModTime().String() }
-func (i fileItem) FilterValue() string { return i.file.Name() }
+func (i fileItem) Title() string {
+	return i.file.Name()
+}
+
+func (i fileItem) Description() string {
+	return "Modified: " + i.file.ModTime().Format(time.Stamp)
+}
+
+func (i fileItem) FilterValue() string {
+	return i.file.Name()
+}
 
 type model struct {
 	quitting            bool
