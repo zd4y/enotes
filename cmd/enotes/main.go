@@ -39,7 +39,7 @@ type model struct {
 	list                list.Model
 	chosen              int
 	editorActive        bool
-	newNoteName         string
+	newNotePath         string
 	password            string
 	passwordVerified    bool
 	noteContents        string
@@ -88,7 +88,7 @@ func (m model) inNewNote() bool {
 }
 
 func (m model) inNewNoteEditor() bool {
-	return len(m.newNoteName) > 0
+	return len(m.newNotePath) > 0
 }
 
 func (m *model) resetChosen() {
@@ -126,7 +126,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.loadingNote = true
 		if m.inNewNoteEditor() {
-			m.newNoteName = ""
+			m.newNotePath = ""
 			m.resetChosen()
 			return m, getDirFiles
 		}

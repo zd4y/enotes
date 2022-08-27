@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/zd4y/enotes/pkg/enotes"
 )
 
 func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
@@ -14,7 +15,14 @@ func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 			m.resetChosen()
 			return m, nil
 		case "enter":
-			m.newNoteName = m.textInput.Value()
+			newNotePath := m.textInput.Value()
+			if ok, err := enotes.NoteExists(newNotePath); ok {
+				return m, tea.Println("Note already exists")
+			} else if err != nil {
+				m.err = err
+				return m, nil
+			}
+			m.newNotePath = newNotePath
 			return m, nil
 		}
 	}

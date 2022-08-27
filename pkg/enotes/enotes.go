@@ -41,6 +41,14 @@ func VerifyPassword(password string) error {
 	return err
 }
 
+func PasswordExists() (bool, error) {
+	return pathExists(passwordFileName)
+}
+
+func NoteExists(path string) (bool, error) {
+	return pathExists(path)
+}
+
 func OpenNote(path string, password string) (string, error) {
 	bytes, err := decrypt(path, password)
 	if err != nil {
@@ -170,4 +178,14 @@ func useTempFile(prefix string, manipulateTempFile func(*os.File) error) (string
 	return tempFileName, func() error {
 		return os.Remove(tempFileName)
 	}, nil
+}
+
+func pathExists(path string) (bool, error) {
+	if _, err := os.Stat(path); err == nil {
+		return true, nil
+	} else if errors.Is(err, os.ErrNotExist) {
+		return false, nil
+	} else {
+		return false, err
+	}
 }

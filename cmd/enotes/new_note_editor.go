@@ -11,7 +11,7 @@ func newNoteEditorUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	m.editorActive = true
-	return m, createNote(m.newNoteName, m.password)
+	return m, createNote(m.newNotePath, m.password)
 }
 
 func newNoteEditorView(m model) string {
