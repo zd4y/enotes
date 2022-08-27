@@ -161,15 +161,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case dirFilesMsg:
 		itemsLen := len(m.list.Items())
 		cmds := make([]tea.Cmd, 0, len(msg.files))
+		skipped := 0
 		for i, file := range msg.files {
 			if !enotes.IsNote(file.Name()) {
+				skipped += 1
 				continue
 			}
 			var cmd tea.Cmd
-			if itemsLen > i+1 {
-				cmd = m.list.SetItem(i+1, fileItem{file})
+			index := i+1-skipped
+			if itemsLen > index {
+				cmd = m.list.SetItem(index, fileItem{file})
 			} else {
-				cmd = m.list.InsertItem(i+1, fileItem{file})
+				cmd = m.list.InsertItem(index, fileItem{file})
 			}
 			cmds = append(cmds, cmd)
 		}
