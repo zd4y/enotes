@@ -151,7 +151,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, openNote(item.file.Name(), m.password)
 	case dirFilesMsg:
 		itemsLen := len(m.list.Items())
-		cmds := make([]tea.Cmd, len(msg.files))
+		cmds := make([]tea.Cmd, 0, len(msg.files))
 		for i, file := range msg.files {
 			var cmd tea.Cmd
 			if itemsLen > i+1 {
