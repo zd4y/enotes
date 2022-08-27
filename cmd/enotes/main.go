@@ -76,12 +76,12 @@ func initialModel() model {
 	pwConfirmTextInput.EchoMode = textinput.EchoPassword
 
 	m := model{
-		chosen: -1,
-		list: list.New(items, list.NewDefaultDelegate(), 0, 0),
-		textInput: textInput,
-		noteViewport: viewport.New(30, 20),
-		spinner: s,
-		passwordExists: passwordExists,
+		chosen:             -1,
+		list:               list.New(items, list.NewDefaultDelegate(), 0, 0),
+		textInput:          textInput,
+		noteViewport:       viewport.New(30, 20),
+		spinner:            s,
+		passwordExists:     passwordExists,
 		pwConfirmTextInput: pwConfirmTextInput,
 	}
 	m.list.Title = "Notes"
