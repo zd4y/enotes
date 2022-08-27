@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -47,9 +46,10 @@ type model struct {
 	spinner             spinner.Model
 	loadingNote         bool
 	textInput           textinput.Model
+	passwordExists      bool
 	creatingNewPassword bool
 	newPasswordFocus    int
-	pwConfirmTextInput  *textinput.Model
+	pwConfirmTextInput  textinput.Model
 	err                 error
 }
 
@@ -66,13 +66,30 @@ func initialModel() model {
 	s := spinner.New()
 	s.Spinner = spinner.Points
 
-	m := model{chosen: -1, list: list.New(items, list.NewDefaultDelegate(), 0, 0), textInput: textInput, noteViewport: viewport.New(30, 20), spinner: s}
+	passwordExists, err := enotes.PasswordExists()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	pwConfirmTextInput := textinput.New()
+	pwConfirmTextInput.Placeholder = "Confirm Password"
+	pwConfirmTextInput.EchoMode = textinput.EchoPassword
+
+	m := model{
+		chosen: -1,
+		list: list.New(items, list.NewDefaultDelegate(), 0, 0),
+		textInput: textInput,
+		noteViewport: viewport.New(30, 20),
+		spinner: s,
+		passwordExists: passwordExists,
+		pwConfirmTextInput: pwConfirmTextInput,
+	}
 	m.list.Title = "Notes"
 	return m
 }
 
 func (m model) inNewPassword() bool {
-	return m.pwConfirmTextInput != nil
+	return !m.passwordExists
 }
 
 func (m model) inPassword() bool {
@@ -150,21 +167,14 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.err = msg.err
 			return m, nil
 		}
-		m.pwConfirmTextInput = nil
 		m.password = ""
 		m.creatingNewPassword = false
+		m.passwordExists = true
 		m.textInput.SetValue("")
 		return m, textinput.Blink
 	case verifyPasswordMsg:
 		if msg.err != nil {
-			if errors.Is(msg.err, fs.ErrNotExist) {
-				ti := textinput.New()
-				m.pwConfirmTextInput = &ti
-				m.pwConfirmTextInput.Placeholder = "Confirm Password"
-				m.pwConfirmTextInput.EchoMode = textinput.EchoPassword
-			} else {
-				m.err = msg.err
-			}
+			m.err = msg.err
 			return m, nil
 		}
 		if !msg.passwordsMatch {

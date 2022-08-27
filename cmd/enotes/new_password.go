@@ -21,7 +21,8 @@ func newPasswordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 				m.password = m.textInput.Value()
 				m.newPasswordFocus += 1
 				m.textInput.Blur()
-				return m, m.pwConfirmTextInput.Focus()
+				cmd := m.pwConfirmTextInput.Focus()
+				return m, cmd
 			case 1:
 				confirmPw := m.pwConfirmTextInput.Value()
 				m.pwConfirmTextInput.Blur()
@@ -44,7 +45,7 @@ func newPasswordUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	case 1:
 		var ti textinput.Model
 		ti, cmd = m.pwConfirmTextInput.Update(msg)
-		m.pwConfirmTextInput = &ti
+		m.pwConfirmTextInput = ti
 	}
 	return m, cmd
 }
