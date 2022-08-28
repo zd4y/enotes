@@ -9,22 +9,29 @@ func fileListUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg := msg.String(); msg {
-		case "q", "esc":
+		case "q":
 			m.quitting = true
 			return m, nil
+		case "esc":
+			if !m.list.SettingFilter() {
+				m.quitting = true
+				return m, nil
+			}
 		case "enter":
-			index := m.list.Index()
-			if index == 0 {
-				m.textInput = textinput.New()
-				m.textInput.Placeholder = "New note name (leave empty for current date)"
-				m.textInput.Focus()
-				m.toNewNote()
-				return m, textinput.Blink
-			} else {
-				m.toNote(index)
-				item := m.list.SelectedItem().(fileItem)
-				m.loadingNote = true
-				return m, openNote(item.file.Name(), m.password)
+			if !m.list.SettingFilter() {
+				index := m.list.Index()
+				if index == 0 {
+					m.textInput = textinput.New()
+					m.textInput.Placeholder = "New note name (leave empty for current date)"
+					m.textInput.Focus()
+					m.toNewNote()
+					return m, textinput.Blink
+				} else {
+					m.toNote(index)
+					item := m.list.SelectedItem().(fileItem)
+					m.loadingNote = true
+					return m, openNote(item.file.Name(), m.password)
+				}
 			}
 		}
 	}

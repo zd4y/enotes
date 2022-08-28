@@ -168,7 +168,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				continue
 			}
 			var cmd tea.Cmd
-			index := i+1-skipped
+			index := i + 1 - skipped
 			if itemsLen > index {
 				cmd = m.list.SetItem(index, fileItem{file})
 			} else {
