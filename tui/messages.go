@@ -1,4 +1,4 @@
-package main
+package tui
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/zd4y/enotes/pkg/enotes"
+	"github.com/zd4y/enotes/enotes"
 
 	tea "github.com/charmbracelet/bubbletea"
 )

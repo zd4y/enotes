@@ -1,11 +1,11 @@
-package main
+package tui
 
 import (
 	"fmt"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/zd4y/enotes/pkg/enotes"
+	"github.com/zd4y/enotes/enotes"
 )
 
 func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {

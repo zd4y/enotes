@@ -1,4 +1,4 @@
-package main
+package tui
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/zd4y/enotes/pkg/enotes"
+	"github.com/zd4y/enotes/enotes"
 )
 
 var docStyle = lipgloss.NewStyle().Margin(1, 2)
@@ -277,7 +277,7 @@ func min(a, b int) int {
 	return b
 }
 
-func main() {
+func Run() {
 	p := tea.NewProgram(initialModel(), tea.WithMouseCellMotion())
 
 	if err := p.Start(); err != nil {
