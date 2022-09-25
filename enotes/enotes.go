@@ -3,19 +3,13 @@ package enotes
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 
 	"filippo.io/age"
 )
-
-var seededRand *rand.Rand = rand.New(
-	rand.NewSource(time.Now().UnixNano()))
 
 const (
 	noteExt          = ".md"
@@ -30,7 +24,10 @@ func PasswordExists() (bool, error) {
 }
 
 func NewPassword(password string) error {
-	content := fmt.Sprint(seededRand.Int())
+	content, err := GenerateRandomString(100)
+	if err != nil {
+		return err
+	}
 	return encrypt([]byte(content), passwordFileName, password)
 }
 
