@@ -13,20 +13,23 @@ func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 		msg := msg.String()
 		switch msg {
 		case "esc":
+			m.noteAlreadyExists = false
 			m.resetChosen()
 			return m, nil
 		case "enter":
-			newNotePath := m.textInput.Value()
-			if newNotePath == "" {
-				newNotePath = time.Now().Format(time.Stamp)
+			m.noteAlreadyExists = false
+			newNoteName := m.textInput.Value()
+			if newNoteName == "" {
+				newNoteName = time.Now().Format(time.Stamp)
 			}
-			if ok, err := enotes.NoteExists(newNotePath); ok {
-				return m, tea.Println("Note already exists")
+			if ok, err := enotes.NoteExists(newNoteName); ok {
+				m.noteAlreadyExists = true
+				return m, nil
 			} else if err != nil {
 				m.err = err
 				return m, nil
 			}
-			m.newNoteName = newNotePath
+			m.newNoteName = newNoteName
 			return m, nil
 		}
 	}
@@ -37,9 +40,14 @@ func newNoteUpdate(msg tea.Msg, m model) (tea.Model, tea.Cmd) {
 }
 
 func newNoteView(m model) string {
-	return fmt.Sprintf(
-		"New note name?\n\n%s\n\n%s\n",
+	s := fmt.Sprintf(
+		"New note name?\n\n%s\n",
 		m.textInput.View(),
-		"(esc to quit)",
 	)
+
+	if m.noteAlreadyExists {
+		s += "\nNote already exists"
+	}
+
+	return s + "\n(esc to quit)\n"
 }

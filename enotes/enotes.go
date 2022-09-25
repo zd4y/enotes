@@ -54,7 +54,8 @@ func IsNote(path string) bool {
 	return strings.HasSuffix(path, noteSuffix)
 }
 
-func NoteExists(path string) (bool, error) {
+func NoteExists(name string) (bool, error) {
+	path := name + noteSuffix
 	return pathExists(path)
 }
 

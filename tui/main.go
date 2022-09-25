@@ -48,6 +48,7 @@ type model struct {
 	chosen              int
 	editorActive        bool
 	newNoteName         string
+	noteAlreadyExists   bool
 	password            string
 	passwordVerified    bool
 	noteContents        string
