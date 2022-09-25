@@ -278,7 +278,7 @@ func min(a, b int) int {
 }
 
 func Run() {
-	p := tea.NewProgram(initialModel(), tea.WithMouseCellMotion())
+	p := tea.NewProgram(initialModel(), tea.WithAltScreen(), tea.WithMouseCellMotion())
 
 	if err := p.Start(); err != nil {
 		fmt.Println("Error running program:", err)
